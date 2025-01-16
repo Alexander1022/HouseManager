@@ -17,7 +17,7 @@ public class Company extends BaseEntity {
     @Column(name = "income", nullable = false)
     private BigDecimal income = BigDecimal.valueOf(0.0);
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Employee> employees;
 
     public Company() {}

@@ -99,6 +99,14 @@ public class Building extends BaseEntity {
         return apartments;
     }
 
+    public void setEmployee(@Valid Employee employee) {
+        this.employee = employee;
+    }
+
+    public void setApartments(Set<Apartment> apartments) {
+        this.apartments = apartments;
+    }
+
     @Override
     public String toString() {
         return "Building{" +

@@ -18,11 +18,11 @@ public class Employee extends BaseEntity {
     private LocalDate hireDate;
 
     @Valid
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "employee", fetch = FetchType.EAGER)
     private Set<Building> buildings;
 
     public Employee() {}

@@ -1,6 +1,8 @@
 package org.example.housemanager.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 public class Pet extends BaseEntity {
@@ -11,8 +13,10 @@ public class Pet extends BaseEntity {
     private boolean usesCommonArea = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "apartment_id", nullable = false)
+    @JoinColumn(name = "apartment_id")
     private Apartment apartment;
+
+    public Pet() {}
 
     public Pet(String name, boolean usesCommonArea, Apartment apartment) {
         this.name = name;

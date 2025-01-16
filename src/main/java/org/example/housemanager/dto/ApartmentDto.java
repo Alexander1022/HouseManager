@@ -13,7 +13,7 @@ public class ApartmentDto {
     @NotBlank(message = "Area cannot be blank!")
     private float area;
 
-    public ApartmentDto(int number, int floor, float area, BuildingDto buildingDto) {
+    public ApartmentDto(int number, int floor, float area) {
         this.number = number;
         this.floor = floor;
         this.area = area;
@@ -41,14 +41,5 @@ public class ApartmentDto {
 
     public void setArea(float area) {
         this.area = area;
-    }
-
-    @Override
-    public String toString() {
-        return "ApartmentDto{" +
-                "number=" + number +
-                ", floor=" + floor +
-                ", area=" + area +
-                '}';
     }
 }

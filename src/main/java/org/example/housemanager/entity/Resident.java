@@ -2,6 +2,8 @@ package org.example.housemanager.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 public class Resident extends BaseEntity {

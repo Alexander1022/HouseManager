@@ -8,19 +8,14 @@ public class EmployeeDto {
     @NotBlank(message = "Name cannot be blank!")
     private String name;
 
-    @NotBlank(message = "Hire date cannot be blank!")
-    private LocalDate hireDate = LocalDate.now();
-
-    public EmployeeDto(String name, LocalDate hireDate) {
+    public EmployeeDto(String name) {
         this.name = name;
-        this.hireDate = hireDate;
     }
 
     @Override
     public String toString() {
         return "EmployeeDto{" +
                 "name='" + name + '\'' +
-                ", hireDate=" + hireDate +
                 '}';
     }
 }

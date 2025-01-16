@@ -8,7 +8,7 @@ import org.example.housemanager.entity.Building;
 import java.util.List;
 
 public class BuildingService {
-    public static void createBuilding(@Valid Building building) {
+    public static void createBuilding(Building building) {
         BuildingDao.createBuilding(building);
     }
 

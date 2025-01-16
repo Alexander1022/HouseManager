@@ -1,7 +1,5 @@
 package org.example.housemanager.dto;
 
-import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
-
 public class CreateApartmentDto {
     private int number;
     private int floor;
@@ -53,6 +51,7 @@ public class CreateApartmentDto {
                 "number=" + number +
                 ", floor=" + floor +
                 ", area=" + area +
+                ", buildingId=" + buildingId +
                 '}';
     }
 }

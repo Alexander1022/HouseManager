@@ -4,11 +4,12 @@ import jakarta.validation.Valid;
 import org.example.housemanager.dao.CompanyDao;
 import org.example.housemanager.dto.CreateCompanyDto;
 import org.example.housemanager.entity.Company;
+import org.example.housemanager.entity.Employee;
 
 import java.util.List;
 
 public class CompanyService {
-    public static void createCompany(@Valid Company company) {
+    public static void createCompany(Company company) {
         CompanyDao.createCompany(company);
     }
 
@@ -36,7 +37,11 @@ public class CompanyService {
         return CompanyDao.getCompanies();
     }
 
-    public static void hireEmployee(long companyId, long employeeId) {
-        CompanyDao.hireEmployee(companyId, employeeId);
+    public static void hireEmployee(Employee employee, Company company) {
+        CompanyDao.hireEmployee(employee, company);
+    }
+
+    public static void fireEmployee(Employee employee, Company company) {
+        CompanyDao.fireEmployee(employee, company);
     }
 }

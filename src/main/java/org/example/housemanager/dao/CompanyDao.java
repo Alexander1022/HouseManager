@@ -8,6 +8,8 @@ import org.example.housemanager.entity.Employee;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.io.ObjectStreamException;
+import java.time.LocalDate;
 import java.util.List;
 
 public class CompanyDao {
@@ -85,24 +87,67 @@ public class CompanyDao {
         return companies;
     }
 
-    public static void hireEmployee(long companyId, long employeeId) {
+    public static void hireEmployee(Employee employee, Company company) {
+        if(employee == null) {
+            throw new IllegalArgumentException("Employee does not exist.");
+        }
+
+        if(company == null) {
+            throw new IllegalArgumentException("Company does not exist.");
+        }
+
         try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
             Transaction transaction = session.beginTransaction();
 
-            Company company = session.get(Company.class, companyId);
-            if (company == null) {
-                throw new IllegalArgumentException("Company not found");
+            employee = session.merge(employee);
+            company = session.merge(company);
+
+            if (company.getEmployees().contains(employee)) {
+                throw new IllegalStateException("Employee already works for this company.");
             }
 
-            Employee employee = session.get(Employee.class, employeeId);
-            if (employee == null) {
-                throw new IllegalArgumentException("Employee not found");
+            if(employee.getCompany() != null && employee.getCompany() != company) {
+                throw new IllegalStateException("Employee works for another company.");
             }
+
+            employee.setCompany(company);
+            employee.setHireDate(LocalDate.now());
 
             company.getEmployees().add(employee);
-            employee.setCompany(company);
 
+            session.saveOrUpdate(employee);
             session.saveOrUpdate(company);
+
+            transaction.commit();
+        }
+    }
+
+    public static void fireEmployee(Employee employee, Company company) {
+        if (employee == null) {
+            throw new IllegalArgumentException("Employee does not exist.");
+        }
+
+        if (company == null) {
+            throw new IllegalArgumentException("Company does not exist.");
+        }
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            employee = session.merge(employee);
+            company = session.merge(company);
+
+            if (!company.getEmployees().contains(employee)) {
+                throw new IllegalStateException("Employee is not part of the specified company.");
+            }
+
+            employee.setCompany(null);
+            employee.setHireDate(null);
+            company.getEmployees().remove(employee);
+
+            session.saveOrUpdate(employee);
+            session.saveOrUpdate(company);
+
             transaction.commit();
         }
     }

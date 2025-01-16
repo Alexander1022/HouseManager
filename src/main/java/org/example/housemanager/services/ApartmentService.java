@@ -10,7 +10,7 @@ import org.example.housemanager.entity.Resident;
 import java.util.List;
 
 public class ApartmentService {
-    public static void createApartment(@Valid Apartment apartment) {
+    public static void createApartment(Apartment apartment) {
         ApartmentDao.createApartment(apartment);
     }
 
@@ -36,6 +36,14 @@ public class ApartmentService {
 
     public static List<Apartment> getAllApartmentsInBuilding(long buildingId) {
         return ApartmentDao.getAllApartmentsInBuilding(buildingId);
+    }
+
+    public static List<Apartment> getAllApartmentsInBuildingOnFloor(long buildingId, int floorNumber) {
+        return ApartmentDao.getAllApartmentsInBuildingOnFloor(buildingId, floorNumber);
+    }
+
+    public static void assignOwnerToApartment(Resident resident, Apartment apartment) {
+        ApartmentDao.assignOwnerToApartment(resident, apartment);
     }
 
     public static Resident getApartmentOwner(long id) {

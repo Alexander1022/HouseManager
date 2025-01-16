@@ -2,6 +2,8 @@ package org.example.housemanager.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.Set;
 
@@ -22,10 +24,10 @@ public class Apartment extends BaseEntity {
     @JoinColumn(name = "building_id", nullable = false)
     private Building building;
 
-    @OneToMany(mappedBy = "apartment", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "apartment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Pet> pets;
 
-    @OneToMany(mappedBy = "apartment", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "apartment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Resident> residents;
 
     public Apartment() {}
