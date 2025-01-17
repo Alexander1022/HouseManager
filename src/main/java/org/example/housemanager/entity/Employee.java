@@ -14,7 +14,7 @@ public class Employee extends BaseEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "hire_date", nullable = true)
+    @Column(name = "hire_date")
     private LocalDate hireDate;
 
     @Valid
@@ -62,5 +62,14 @@ public class Employee extends BaseEntity {
 
     public void setBuildings(Set<Building> buildings) {
         this.buildings = buildings;
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "name='" + name + '\'' +
+                ", hireDate=" + hireDate +
+                ", company=" + company +
+                '}';
     }
 }

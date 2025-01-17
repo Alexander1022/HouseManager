@@ -3,6 +3,7 @@ package org.example.housemanager.services;
 import jakarta.validation.Valid;
 import org.example.housemanager.dao.CompanyDao;
 import org.example.housemanager.dto.CreateCompanyDto;
+import org.example.housemanager.entity.Building;
 import org.example.housemanager.entity.Company;
 import org.example.housemanager.entity.Employee;
 
@@ -41,7 +42,15 @@ public class CompanyService {
         CompanyDao.hireEmployee(employee, company);
     }
 
+    public static void serveBuilding(Building building, Company company) {
+        CompanyDao.serveBuilding(building, company);
+    }
+
     public static void fireEmployee(Employee employee, Company company) {
         CompanyDao.fireEmployee(employee, company);
+    }
+
+    public static double calculateTaxPerEmployee(Company company, Employee employee) {
+        return CompanyDao.calculateTaxPerEmployee(company, employee);
     }
 }

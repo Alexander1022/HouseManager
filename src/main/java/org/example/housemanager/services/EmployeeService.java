@@ -1,9 +1,7 @@
 package org.example.housemanager.services;
 
-import jakarta.validation.Valid;
 import org.example.housemanager.dao.EmployeeDao;
 import org.example.housemanager.dto.CreateEmployeeDto;
-import org.example.housemanager.entity.Building;
 import org.example.housemanager.entity.Employee;
 
 public class EmployeeService {
@@ -29,9 +27,5 @@ public class EmployeeService {
 
     public static Employee getEmployeeById(long id) {
         return EmployeeDao.getEmployeeById(id);
-    }
-
-    public static void serveBuilding(Employee employee, Building building) {
-        EmployeeDao.serveBuilding(employee, building);
     }
 }

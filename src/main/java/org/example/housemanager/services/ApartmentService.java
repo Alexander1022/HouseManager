@@ -49,4 +49,8 @@ public class ApartmentService {
     public static Resident getApartmentOwner(long id) {
         return ApartmentDao.getApartmentOwner(id);
     }
+
+    public static void payTax(Apartment apartment) {
+        ApartmentDao.payTax(apartment);
+    }
 }

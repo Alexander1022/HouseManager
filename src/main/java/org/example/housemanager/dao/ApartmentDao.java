@@ -5,12 +5,12 @@ import jakarta.validation.constraints.Positive;
 import org.example.housemanager.configuration.SessionFactoryUtility;
 import org.example.housemanager.dto.CreateApartmentDto;
 import org.example.housemanager.dto.CreateResidentDto;
-import org.example.housemanager.entity.Apartment;
-import org.example.housemanager.entity.Building;
-import org.example.housemanager.entity.Resident;
+import org.example.housemanager.entity.*;
+import org.example.housemanager.services.ApartmentService;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class ApartmentDao {
@@ -123,12 +123,10 @@ public class ApartmentDao {
 
         try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
             Transaction transaction = session.beginTransaction();
+            resident = session.merge(resident);
+            apartment = session.merge(apartment);
+
             apartment.setOwner(resident);
-
-            // Може да апартаметът да е под наем и реално да не живее собственикът в него
-            // resident.setApartment(apartment);
-            // session.saveOrUpdate(resident);
-
             session.saveOrUpdate(apartment);
             transaction.commit();
 
@@ -140,6 +138,124 @@ public class ApartmentDao {
         try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
             Apartment apartment = session.get(Apartment.class, id);
             return apartment != null ? apartment.getOwner() : null;
+        }
+    }
+
+    public static double calculateTax(Apartment apartment, Building building) {
+        if(apartment == null) {
+            throw new IllegalArgumentException("Apartment does not exist.");
+        }
+
+        if(building == null) {
+            throw new IllegalArgumentException("Building does not exist.");
+        }
+
+        double tax = 0.0f;
+        double BASE_TAX_PER_SQUARE_METER = 2.0;
+        double PET_TAX = 10.0;
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            apartment = session.merge(apartment);
+            building = session.merge(building);
+
+            if(apartment.getResidents().isEmpty()) {
+                return tax;
+            }
+
+            double ADDITIONAL_TAX_PER_RESIDENT = building.getTax().floatValue();
+
+            tax += apartment.getArea() * BASE_TAX_PER_SQUARE_METER;
+
+            for (Resident resident : apartment.getResidents()) {
+                if (resident.getAge() > 7 && resident.isUsesElevator()) {
+                    tax += ADDITIONAL_TAX_PER_RESIDENT;
+                }
+            }
+
+            for(Pet pet : apartment.getPets()) {
+                if(pet.isUsesCommonArea()) {
+                    tax += PET_TAX;
+                }
+            }
+        }
+        return tax;
+    }
+
+    public static Company findManagingCompany(Apartment apartment) {
+        if (apartment == null) {
+            throw new IllegalArgumentException("Apartment does not exist.");
+        }
+
+        Company managingCompany;
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+            apartment = session.merge(apartment);
+
+            Building building = apartment.getBuilding();
+            if (building == null) {
+                throw new IllegalStateException("No building found for the given apartment.");
+            }
+
+            Employee manager = building.getEmployee();
+            if (manager == null) {
+                throw new IllegalStateException("No manager found for the building.");
+            }
+
+            managingCompany = manager.getCompany();
+            if (managingCompany == null) {
+                throw new IllegalStateException("No company managing the building.");
+            }
+        }
+
+        return managingCompany;
+    }
+
+
+    public static void payTax(Apartment apartment) {
+        if (apartment == null) {
+            throw new IllegalArgumentException("Apartment does not exist.");
+        }
+
+        if(apartment.isTaxPaid()) {
+            throw new IllegalStateException("The tax is already paid.");
+        }
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            apartment = session.merge(apartment);
+            Building building = apartment.getBuilding();
+
+            if (building == null) {
+                throw new IllegalStateException("Building for the apartment does not exist.");
+            }
+
+            Company managingCompany = findManagingCompany(apartment);
+
+            if (managingCompany == null) {
+                throw new IllegalStateException("Managing company for the building does not exist.");
+            }
+
+            if (apartment.isTaxPaid()) {
+                throw new IllegalStateException("Tax for this apartment has already been paid.");
+            }
+
+            apartment.setTaxPaid(true);
+
+            double tax = apartment.getMonthlyTax();
+            BigDecimal newIncome = managingCompany.getIncome().add(BigDecimal.valueOf(tax));
+            managingCompany.setIncome(newIncome);
+
+            session.saveOrUpdate(apartment);
+            session.saveOrUpdate(managingCompany);
+
+            transaction.commit();
+
+            System.out.println("Tax of " + tax + " has been paid for Apartment " + apartment.getNumber() + ".");
+            System.out.println("Company " + managingCompany.getName() + " now has a total income of " + newIncome + ".");
         }
     }
 }

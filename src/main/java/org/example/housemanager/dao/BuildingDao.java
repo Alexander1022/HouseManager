@@ -5,6 +5,7 @@ import org.example.housemanager.configuration.SessionFactoryUtility;
 import org.example.housemanager.dto.BuildingDto;
 import org.example.housemanager.dto.CreateApartmentDto;
 import org.example.housemanager.dto.CreateBuildingDto;
+import org.example.housemanager.entity.Apartment;
 import org.example.housemanager.entity.Building;
 import org.example.housemanager.entity.Company;
 import org.hibernate.Session;
@@ -88,5 +89,30 @@ public class BuildingDao {
         }
 
         return buildings;
+    }
+
+    public static double calculateTax(Building building) {
+        if (building == null) {
+           throw new IllegalArgumentException("Building doesn't exist.");
+        }
+        double tax = 0.0f;
+
+        try(Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            building = session.merge(building);
+
+            for(Apartment apartment : building.getApartments()) {
+                double apartmentTax = ApartmentDao.calculateTax(apartment, building);
+                apartment.setMonthlyTax(apartmentTax);
+                apartment.setTaxPaid(false);
+                session.saveOrUpdate(apartment);
+                tax += apartmentTax;
+            }
+
+            transaction.commit();
+        }
+
+        return tax;
     }
 }

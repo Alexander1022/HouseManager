@@ -16,6 +16,12 @@ public class Apartment extends BaseEntity {
     @Column(name = "area", nullable = false)
     private float area;
 
+    @Column(name = "monthly_tax", nullable = false)
+    private double monthlyTax = 0.0;
+
+    @Column(name = "is_tax_paid", nullable = false)
+    private boolean isTaxPaid = false;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "owner_id", referencedColumnName = "id", unique = true)
     private Resident owner;
@@ -105,12 +111,29 @@ public class Apartment extends BaseEntity {
         this.residents = residents;
     }
 
+    public double getMonthlyTax() {
+        return monthlyTax;
+    }
+
+    public void setMonthlyTax(double monthlyTax) {
+        this.monthlyTax = monthlyTax;
+    }
+
+    public boolean isTaxPaid() {
+        return isTaxPaid;
+    }
+
+    public void setTaxPaid(boolean taxPaid) {
+        isTaxPaid = taxPaid;
+    }
+
     @Override
     public String toString() {
         return "Apartment{" +
                 "number=" + number +
                 ", floor=" + floor +
                 ", area=" + area +
+                ", monthlyTax=" + monthlyTax +
                 '}';
     }
 }

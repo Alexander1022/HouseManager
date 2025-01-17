@@ -72,36 +72,24 @@ public class EmployeeDao {
         return employee;
     }
 
-    public static void serveBuilding(Employee employee, Building building) {
-        if (employee == null) {
+    public static double calculateTax(Employee employee) {
+        if(employee == null) {
             throw new IllegalArgumentException("Employee does not exist.");
         }
 
-        if (building == null) {
-            throw new IllegalArgumentException("Building does not exist.");
-        }
+        double tax = 0.0f;
 
-        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+        try(Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
             Transaction transaction = session.beginTransaction();
 
             employee = session.merge(employee);
-            building = session.merge(building);
 
-            if(building.getEmployee() != employee) {
-                throw new IllegalStateException("Someone else is working on that");
+            for(Building building : employee.getBuildings()) {
+                building = session.merge(building);
+                tax += BuildingDao.calculateTax(building);
             }
-
-            if(employee.getBuildings().contains(building)) {
-                throw new IllegalStateException("This employee is already working on it.");
-            }
-
-            employee.getBuildings().add(building);
-            building.setEmployee(employee);
-
-            session.saveOrUpdate(employee);
-            session.saveOrUpdate(building);
-
-            transaction.commit();
         }
+
+        return tax;
     }
 }
