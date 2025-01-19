@@ -12,9 +12,7 @@ import org.hibernate.Transaction;
 
 import java.io.ObjectStreamException;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class CompanyDao {
     public static void createCompany(@Valid Company company) {
@@ -250,5 +248,222 @@ public class CompanyDao {
         }
 
         return tax;
+    }
+
+    public static List<Company> getCompaniesSortedByIncome(boolean order) {
+        List<Company> companies;
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            companies = session.createQuery(
+                    "FROM Company c ORDER BY c.income " + (order ? "DESC" : "ASC"),
+                    Company.class
+            ).getResultList();
+
+            transaction.commit();
+        }
+        return companies;
+    }
+
+    public static List<Employee> getEmployeesByCompanySortedByName(Company company, boolean order) {
+        if (company == null) {
+            throw new IllegalArgumentException("Company cannot be null.");
+        }
+
+        List<Employee> employees;
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            employees = session.createQuery(
+                    "SELECT e FROM Employee e WHERE e.company = :company ORDER BY e.name " + (order ? "ASC" : "DESC"),
+                    Employee.class
+            ).setParameter("company", company).getResultList();
+
+            transaction.commit();
+        }
+        return employees;
+    }
+
+    public static List<Employee> getEmployeesByCompanySortedByBuildingsCount(Company company, boolean order) {
+        if (company == null) {
+            throw new IllegalArgumentException("Company cannot be null.");
+        }
+
+        List<Employee> employees;
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            employees = session.createQuery(
+                    "SELECT e FROM Employee e WHERE e.company = :company " +
+                            "ORDER BY SIZE(e.buildings) " + (order ? "DESC" : "ASC"),
+                    Employee.class
+            ).setParameter("company", company).getResultList();
+
+            transaction.commit();
+        }
+        return employees;
+    }
+
+    public static Map<Employee, List<Building>> getBuildingsByEmployeesInCompany(Company company) {
+        if (company == null) {
+            throw new IllegalArgumentException("Company cannot be null.");
+        }
+
+        Map<Employee, List<Building>> employeeBuildingMap = new HashMap<>();
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            List<Employee> employees = session.createQuery(
+                    "SELECT e FROM Employee e " +
+                            "LEFT JOIN FETCH e.buildings b " +
+                            "WHERE e.company = :company",
+                    Employee.class
+            ).setParameter("company", company).getResultList();
+
+            for (Employee employee : employees) {
+                List<Building> buildings = new ArrayList<>(employee.getBuildings());
+                employeeBuildingMap.put(employee, buildings);
+            }
+
+            transaction.commit();
+        }
+        return employeeBuildingMap;
+    }
+
+    public static void detailedTaxesInformation(List<Company> companies) {
+        if (companies == null || companies.isEmpty()) {
+            throw new IllegalArgumentException("The company list cannot be null or empty.");
+        }
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Map<Long, Map<Long, Map<String, Double>>> companyPayments = new HashMap<>();
+
+            for (Company company : companies) {
+                Map<Long, Map<String, Double>> employeePayments = new HashMap<>();
+                companyPayments.put(company.getId(), employeePayments);
+
+                List<Employee> employees = session.createQuery(
+                                "SELECT e FROM Employee e WHERE e.company = :company", Employee.class)
+                        .setParameter("company", company)
+                        .getResultList();
+
+                for (Employee employee : employees) {
+                    Map<String, Double> buildingPayments = new HashMap<>();
+                    employeePayments.put(employee.getId(), buildingPayments);
+
+                    List<Building> buildings = session.createQuery(
+                                    "SELECT b FROM Building b WHERE b.employee = :employee", Building.class)
+                            .setParameter("employee", employee)
+                            .getResultList();
+
+                    for (Building building : buildings) {
+                        double buildingTotalPayments = 0;
+
+                        List<Apartment> apartments = session.createQuery(
+                                        "SELECT a FROM Apartment a WHERE a.building = :building", Apartment.class)
+                                .setParameter("building", building)
+                                .getResultList();
+
+                        for (Apartment apartment : apartments) {
+                            if (apartment.getMonthlyTax() > 0) {
+                                buildingTotalPayments += apartment.getMonthlyTax();
+                            }
+                        }
+
+                        buildingPayments.put(building.getAddress(), buildingTotalPayments);
+                    }
+                }
+            }
+
+            for (Map.Entry<Long, Map<Long, Map<String, Double>>> companyEntry : companyPayments.entrySet()) {
+                Company company = session.get(Company.class, companyEntry.getKey());
+                System.out.println("Company: " + company.getName());
+
+                for (Map.Entry<Long, Map<String, Double>> employeeEntry : companyEntry.getValue().entrySet()) {
+                    Employee employee = session.get(Employee.class, employeeEntry.getKey());
+                    System.out.println("\tEmployee: " + employee.getName());
+
+                    double totalEmployeePayments = 0;
+                    for (Map.Entry<String, Double> buildingEntry : employeeEntry.getValue().entrySet()) {
+                        String buildingAddress = buildingEntry.getKey();
+                        double buildingPayments = buildingEntry.getValue();
+
+                        System.out.println("\t\tBuilding: " + buildingAddress + ", Total Payments: " + buildingPayments);
+                        totalEmployeePayments += buildingPayments;
+                    }
+
+                    System.out.println("\tTotal Payments for Employee: " + totalEmployeePayments);
+                }
+            }
+        }
+    }
+
+    public static void detailedPaidTaxesInformation(List<Company> companies) {
+        if (companies == null || companies.isEmpty()) {
+            throw new IllegalArgumentException("The company list cannot be null or empty.");
+        }
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Map<Long, Map<Long, Map<String, Double>>> companyPayments = new HashMap<>();
+
+
+            for (Company company : companies) {
+                Map<Long, Map<String, Double>> employeePayments = new HashMap<>();
+                companyPayments.put(company.getId(), employeePayments);
+
+                List<Employee> employees = session.createQuery(
+                                "SELECT e FROM Employee e WHERE e.company = :company", Employee.class)
+                        .setParameter("company", company)
+                        .getResultList();
+
+                for (Employee employee : employees) {
+                    Map<String, Double> buildingPayments = new HashMap<>();
+                    employeePayments.put(employee.getId(), buildingPayments);
+
+                    List<Building> buildings = session.createQuery(
+                                    "SELECT b FROM Building b WHERE b.employee = :employee", Building.class)
+                            .setParameter("employee", employee)
+                            .getResultList();
+
+                    for (Building building : buildings) {
+                        double buildingPaidPayments = 0;
+
+                        List<Apartment> apartments = session.createQuery(
+                                        "SELECT a FROM Apartment a WHERE a.building = :building", Apartment.class)
+                                .setParameter("building", building)
+                                .getResultList();
+
+                        for (Apartment apartment : apartments) {
+                            if (apartment.getMonthlyTax() > 0 && apartment.isTaxPaid()) {
+                                buildingPaidPayments += apartment.getMonthlyTax();
+                            }
+                        }
+                        buildingPayments.put(building.getAddress(), buildingPaidPayments);
+                    }
+                }
+            }
+
+            for (Map.Entry<Long, Map<Long, Map<String, Double>>> companyEntry : companyPayments.entrySet()) {
+                Company company = session.get(Company.class, companyEntry.getKey());
+                System.out.println("Company: " + company.getName());
+
+                for (Map.Entry<Long, Map<String, Double>> employeeEntry : companyEntry.getValue().entrySet()) {
+                    Employee employee = session.get(Employee.class, employeeEntry.getKey());
+                    System.out.println("\tEmployee: " + employee.getName());
+
+                    double totalEmployeePaidPayments = 0;
+                    for (Map.Entry<String, Double> buildingEntry : employeeEntry.getValue().entrySet()) {
+                        String buildingAddress = buildingEntry.getKey();
+                        double buildingPaidPayments = buildingEntry.getValue();
+
+                        System.out.println("\t\tBuilding: " + buildingAddress + ", Paid Payments: " + buildingPaidPayments);
+                        totalEmployeePaidPayments += buildingPaidPayments;
+                    }
+
+                    System.out.println("\tTotal Paid Payments for Employee: " + totalEmployeePaidPayments);
+                }
+            }
+        }
     }
 }

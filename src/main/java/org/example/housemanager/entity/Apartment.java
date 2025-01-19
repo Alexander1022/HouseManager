@@ -2,9 +2,8 @@ package org.example.housemanager.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 @Entity
@@ -21,6 +20,9 @@ public class Apartment extends BaseEntity {
 
     @Column(name = "is_tax_paid", nullable = false)
     private boolean isTaxPaid = false;
+
+    @Column(name = "paid_tax_date", nullable = false)
+    private LocalDate paidTaxDate = LocalDate.of(1980, 1, 1);
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "owner_id", referencedColumnName = "id", unique = true)
@@ -127,6 +129,14 @@ public class Apartment extends BaseEntity {
         isTaxPaid = taxPaid;
     }
 
+    public LocalDate getPaidTaxDate() {
+        return paidTaxDate;
+    }
+
+    public void setPaidTaxDate(LocalDate paidTaxDate) {
+        this.paidTaxDate = paidTaxDate;
+    }
+
     @Override
     public String toString() {
         return "Apartment{" +
@@ -134,6 +144,8 @@ public class Apartment extends BaseEntity {
                 ", floor=" + floor +
                 ", area=" + area +
                 ", monthlyTax=" + monthlyTax +
+                ", isTaxPaid=" + isTaxPaid +
+                ", paidTaxDate=" + paidTaxDate +
                 '}';
     }
 }

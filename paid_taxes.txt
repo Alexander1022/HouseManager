@@ -1,0 +1,3 @@
+Company, Employee, Building, Apartment, Amount, Payment Date
+Residents are Evil, John Smith, Oak Street 123, 101, 257.5, 2025-01-19, 2025-01-19
+Residents are Evil, John Smith, Oak Street 123, 301, 242.0, 2025-01-19, 2025-01-19

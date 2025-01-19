@@ -8,6 +8,7 @@ import org.example.housemanager.entity.Company;
 import org.example.housemanager.entity.Employee;
 
 import java.util.List;
+import java.util.Map;
 
 public class CompanyService {
     public static void createCompany(Company company) {
@@ -52,5 +53,46 @@ public class CompanyService {
 
     public static double calculateTaxPerEmployee(Company company, Employee employee) {
         return CompanyDao.calculateTaxPerEmployee(company, employee);
+    }
+
+    public static List<Company> getCompaniesSortedByIncome(boolean order) {
+        return CompanyDao.getCompaniesSortedByIncome(order);
+    }
+
+    public static List<Employee> getEmployeesByCompanySortedByName(Company company, boolean order) {
+        return CompanyDao.getEmployeesByCompanySortedByName(company, order);
+    }
+
+    public static List<Employee> getEmployeesByCompanySortedByBuildingsCount(Company company, boolean order) {
+        return CompanyDao.getEmployeesByCompanySortedByBuildingsCount(company, order);
+    }
+
+    public static void printBuildingsByEmployeeInCompany(Company company) {
+        Map<Employee, List<Building>> employeeBuildingMap = CompanyDao.getBuildingsByEmployeesInCompany(company);
+
+        System.out.println("Buildings served by employees in company: " + company.getName());
+
+        for (Map.Entry<Employee, List<Building>> entry : employeeBuildingMap.entrySet()) {
+            Employee employee = entry.getKey();
+            List<Building> buildings = entry.getValue();
+
+            System.out.println("------------");
+
+            System.out.println("Employee: " + employee.getName());
+            System.out.println("Total buildings: " + buildings.size());
+
+            for (Building building : buildings) {
+                System.out.println("  - " + building.getAddress());
+            }
+        }
+        System.out.println("------------");
+    }
+
+    public static void detailedTaxesInformation(List<Company> companies) {
+        CompanyDao.detailedTaxesInformation(companies);
+    }
+
+    public static void detailedPaidTaxesInformation(List<Company> companies) {
+        CompanyDao.detailedPaidTaxesInformation(companies);
     }
 }

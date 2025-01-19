@@ -11,6 +11,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 
 public class ApartmentDao {
@@ -219,7 +221,11 @@ public class ApartmentDao {
             throw new IllegalArgumentException("Apartment does not exist.");
         }
 
-        if(apartment.isTaxPaid()) {
+        if(apartment.getMonthlyTax() == 0) {
+            throw new IllegalStateException("The tax is currently 0.");
+        }
+
+        if(apartment.isTaxPaid() && Period.between(apartment.getPaidTaxDate(), LocalDate.now()).getMonths() == 1) {
             throw new IllegalStateException("The tax is already paid.");
         }
 
@@ -244,6 +250,7 @@ public class ApartmentDao {
             }
 
             apartment.setTaxPaid(true);
+            apartment.setPaidTaxDate(LocalDate.now());
 
             double tax = apartment.getMonthlyTax();
             BigDecimal newIncome = managingCompany.getIncome().add(BigDecimal.valueOf(tax));

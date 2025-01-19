@@ -8,9 +8,13 @@ import org.example.housemanager.dto.CreateBuildingDto;
 import org.example.housemanager.entity.Apartment;
 import org.example.housemanager.entity.Building;
 import org.example.housemanager.entity.Company;
+import org.example.housemanager.entity.Resident;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BuildingDao {
@@ -105,7 +109,11 @@ public class BuildingDao {
             for(Apartment apartment : building.getApartments()) {
                 double apartmentTax = ApartmentDao.calculateTax(apartment, building);
                 apartment.setMonthlyTax(apartmentTax);
-                apartment.setTaxPaid(false);
+
+                if(Period.between(apartment.getPaidTaxDate(), LocalDate.now()).getMonths() >= 1) {
+                    apartment.setTaxPaid(false);
+                }
+
                 session.saveOrUpdate(apartment);
                 tax += apartmentTax;
             }
@@ -115,4 +123,91 @@ public class BuildingDao {
 
         return tax;
     }
+
+    public static List<Resident> getResidentsByBuildingSortedByName(Building building, boolean order) {
+        if (building == null) {
+            throw new IllegalArgumentException("Building cannot be null.");
+        }
+
+        List<Resident> residents;
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            residents = session.createQuery(
+                    "SELECT r FROM Resident r JOIN r.apartment a WHERE a.building = :building " +
+                            "ORDER BY r.name " + (order ? "ASC" : "DESC"),
+                    Resident.class
+            ).setParameter("building", building).getResultList();
+
+            transaction.commit();
+        }
+        return residents;
+    }
+
+    public static List<Resident> getResidentsByBuildingSortedByAge(Building building, boolean order) {
+        if (building == null) {
+            throw new IllegalArgumentException("Building cannot be null.");
+        }
+
+        List<Resident> residents;
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            residents = session.createQuery(
+                    "SELECT r FROM Resident r JOIN r.apartment a WHERE a.building = :building " +
+                            "ORDER BY r.age " + (order ? "ASC" : "DESC"),
+                    Resident.class
+            ).setParameter("building", building).getResultList();
+
+            transaction.commit();
+        }
+        return residents;
+    }
+
+    public static List<Apartment> getApartmentsInBuilding(Building building) {
+        if (building == null) {
+            throw new IllegalArgumentException("Building cannot be null.");
+        }
+
+        List<Apartment> apartments;
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            apartments = session.createQuery(
+                    "SELECT a FROM Apartment a WHERE a.building = :building",
+                    Apartment.class
+            ).setParameter("building", building).getResultList();
+
+            transaction.commit();
+        }
+
+        return apartments;
+    }
+
+    public static List<Resident> getResidentsInBuilding(Building building) {
+        if (building == null) {
+            throw new IllegalArgumentException("Building cannot be null.");
+        }
+
+        List<Resident> residents = new ArrayList<>();
+
+        try (Session session = SessionFactoryUtility.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            List<Apartment> apartments = session.createQuery(
+                    "SELECT a FROM Apartment a WHERE a.building = :building",
+                    Apartment.class
+            ).setParameter("building", building).getResultList();
+
+            for (Apartment apartment : apartments) {
+                residents.addAll(apartment.getResidents());
+            }
+
+            transaction.commit();
+        }
+
+        return residents;
+    }
+
 }
